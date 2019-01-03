@@ -51,16 +51,16 @@ namespace OpusIHRM
         public IHRM()
         {
             //Testing...
-            SourceFolder = @"D:\Opus\Development\Jogessor\DosExperiment\Source";
-            BackupFolder = @"D:\Opus\Development\Jogessor\DosExperiment\BackUp";
-            DestinationFolder = @"D:\Opus\Development\Jogessor\DosExperiment\Destination";
-            LogFolder = @"D:\Opus\Development\Jogessor\DosExperiment\LogFiles\";
+            //SourceFolder = @"D:\Opus\Development\Jogessor\DosExperiment\Source";
+            //BackupFolder = @"D:\Opus\Development\Jogessor\DosExperiment\BackUp";
+            //DestinationFolder = @"D:\Opus\Development\Jogessor\DosExperiment\Destination";
+            //LogFolder = @"D:\Opus\Development\Jogessor\DosExperiment\LogFiles\";
 
             //Deploy...
-            //SourceFolder = @"C:\inetpub\wwwroot\Payroll\Upload\XmlData";
-            //BackupFolder = @"E:\IHRMFiles\BackUp";
-            //DestinationFolder = @"X:\SLR.READ";
-            //LogFolder = @"E:\IHRMFiles\LogFiles\";
+            SourceFolder = @"C:\inetpub\wwwroot\Payroll\Upload\XmlData";
+            BackupFolder = @"E:\IHRMFiles\BackUp";
+            DestinationFolder = @"X:\SLR.READ";
+            LogFolder = @"E:\IHRMFiles\LogFiles\";
 
 
         }
@@ -146,16 +146,17 @@ namespace OpusIHRM
         {
             //Deploy...
 
-            //LogFile = @"";
-            //ConnectionString = @"Data Source=WIN-7HGA9A6FBHT;Initial Catalog=db_ABL_RTGS;User ID=sa;Password=sa@123; Pooling=true;Max Pool Size=32700;";
-            //sourceFolder = @"";//Assuming Test is your Folder
-            //WriteBackUpFolder = @"D:\Opus\Development\Jogessor\DosExperiment\WriteBackUpFolder";
+            LogFile = @"E:\IHRMFiles\IHRMStatusUpdateLog.txt";
+            ConnectionString = @"Data Source=WIN-AJMS15ULNA8\Ablsql;Initial Catalog=db_Goldfish;User ID=sa;Password=Abl#743%; Pooling=true;Max Pool Size=32700;";
+            sourceFolder = @"X:\SLR.WRITE";//Assuming Test is your Folder
+            WriteBackUpFolder = @"E:\IHRMFiles\WriteBackup";
 
             //Testing... 
-            LogFile = @"D:\Opus\Development\Jogessor\DosExperiment\IHRMStatusUpdateLog.txt";
-            ConnectionString = @"Data Source=DESKTOP-ALPFNNL;Initial Catalog=db_Goldfish;User ID=sa;Password=sa@123; Pooling=true;Max Pool Size=32700;";
-            sourceFolder = @"D:\Opus\Development\Jogessor\DosExperiment\SLR.WRITE";//Assuming Test is your Folder
-            WriteBackUpFolder = @"D:\Opus\Development\Jogessor\DosExperiment\WriteBackUpFolder";
+            //LogFile = @"D:\Opus\Development\Jogessor\DosExperiment\IHRMStatusUpdateLog.txt";
+            //ConnectionString = @"Data Source=DESKTOP-ALPFNNL;Initial Catalog=db_Goldfish;User ID=sa;Password=sa@123; Pooling=true;Max Pool Size=32700;";
+            //sourceFolder = @"D:\Opus\Development\Jogessor\DosExperiment\SLR.WRITE";//Assuming Test is your Folder
+            //WriteBackUpFolder = @"D:\Opus\Development\Jogessor\DosExperiment\WriteBackUpFolder";
+
         }
 
         public void Run()
@@ -172,7 +173,7 @@ namespace OpusIHRM
                     string FileName, TranNumber, Status, ErrMessage;
                     DirectoryInfo d = new DirectoryInfo(sourceFolder);
                     FileInfo[] Files = d.GetFiles("*.xml"); //Getting Text files
-                    
+
                     foreach (FileInfo file in Files)
                     {
                         if (File.Exists(WriteBackUpFolder + "\\" + file.Name)) continue;
@@ -218,7 +219,7 @@ namespace OpusIHRM
                         //Console.WriteLine("I");                                     
                     }
                 }
-                flag = Count.ToString() + ", Files Updated";               
+                flag = Count.ToString() + ", Files Updated";
             }
             catch (SqlException e)
             {
