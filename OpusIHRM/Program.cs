@@ -51,29 +51,32 @@ namespace OpusIHRM
         private readonly string LogFolder;
         private readonly string RawXMLBackUp;
         private readonly string DuplicateFolder;
+        private readonly string ProcessedFolder;
         private readonly SealXmlFile sealXmlFile;
         private readonly XmlDocument doc;
 
         public IHRM()
         {
             #region Testing...
-            SourceFolder = @"E:\Development\Jogessor\DosExperiment\Source";
-            BackupFolder = @"E:\Development\Jogessor\DosExperiment\BackUp";
-            RawXMLBackUp = @"E:\Development\Jogessor\DosExperiment\RawXMLBackUp";
-            DestinationFolder = @"E:\Development\Jogessor\DosExperiment\Destination";
-            DuplicateFolder = @"E:\Development\Jogessor\DosExperiment\Duplicate";
-            LogFolder = @"E:\Development\Jogessor\DosExperiment\LogFiles\";
-            ConnectionString = @"Data Source=.;Initial Catalog=db_Goldfish;User ID=sa;Password=sa@1234;Pooling=true;Max Pool Size=32700;Integrated Security=True";
+            //SourceFolder = @"E:\Development\Jogessor\DosExperiment\Source";
+            //BackupFolder = @"E:\Development\Jogessor\DosExperiment\BackUp";
+            //RawXMLBackUp = @"E:\Development\Jogessor\DosExperiment\RawXMLBackUp";
+            //DestinationFolder = @"E:\Development\Jogessor\DosExperiment\Destination";
+            //DuplicateFolder = @"E:\Development\Jogessor\DosExperiment\Duplicate";
+            //ProcessedFolder = @"E:\Development\Jogessor\DosExperiment\ProcessedFolder";
+            //LogFolder = @"E:\Development\Jogessor\DosExperiment\LogFiles\";
+            //ConnectionString = @"Data Source=.;Initial Catalog=db_Goldfish;User ID=sa;Password=sa@1234;Pooling=true;Max Pool Size=32700;Integrated Security=True";
             #endregion
 
             #region Deploy...
-            //SourceFolder = @"C:\inetpub\wwwroot\Payroll\Upload\XmlData";
-            //BackupFolder = @"E:\IHRMFiles\BackUp";
-            //RawXMLBackUp = @"";
-            //DestinationFolder = @"X:\SLR.READ";
-            //DuplicateFolder = @"";
-            //LogFolder = @"E:\IHRMFiles\LogFiles\";
-            //ConnectionString = @"Data Source=WIN-AJMS15ULNA8\Ablsql;Initial Catalog=db_Goldfish;User ID=sa;Password=Abl#743%; Pooling=true;Max Pool Size=32700;";
+            SourceFolder = @"C:\inetpub\wwwroot\Payroll\Upload\XmlData";
+            BackupFolder = @"E:\IHRMFiles\BackUp";
+            RawXMLBackUp = @"E:\IHRMFiles\RAWXmlBackup";
+            DestinationFolder = @"X:\SLR.READ";
+            DuplicateFolder = @"E:\IHRMFiles\Duplicate";
+            ProcessedFolder = @"E:\IHRMFiles\Processed";
+            LogFolder = @"E:\IHRMFiles\LogFiles\";
+            ConnectionString = @"Data Source=WIN-AJMS15ULNA8\Ablsql;Initial Catalog=db_Goldfish;User ID=sa;Password=Abl#743%; Pooling=true;Max Pool Size=32700;";
             #endregion
 
             sealXmlFile = SealXmlFile.getInstance();
@@ -110,10 +113,10 @@ namespace OpusIHRM
                                     sw.Write(file.FullName);
                                     try
                                     {
-                                        string AccountNumber, YearMonth, Amount;
-                                        AccountNumber = YearMonth = Amount = "N/A";
+                                        string AccountNumber, YearMonth, Amount, FileId;
+                                        AccountNumber = YearMonth = Amount = FileId = "N/A";
                                         doc.Load(file.FullName);
-                                        File.Copy(file.FullName,RawXMLBackUp + "//"+file.Name, true);
+                                        File.Copy(file.FullName, RawXMLBackUp + "//" + file.Name, true);
 
                                         XmlNodeList elements = doc.GetElementsByTagName("CREDIT_ACCT_NO");
                                         if (elements.Count > 0)
@@ -134,11 +137,34 @@ namespace OpusIHRM
                                             doc.DocumentElement.RemoveChild(elements[0]);
                                         }
 
-                                        string Tmp = $"SELECT Status FROM IHRMBatchLog WHERE YearMonth = '{YearMonth}' AND AccountNumber = '{AccountNumber}' AND Amount = '{Amount}';";
+                                        elements = doc.GetElementsByTagName("UniqueId");
+                                        if (elements.Count > 0)
+                                        {
+                                            FileId = elements[0].InnerText;
+                                            doc.DocumentElement.RemoveChild(elements[0]);
+                                        }
+
+                                        string Tmp = $"SELECT FileName FROM IHRMBatchFileTrack WHERE FileId = '{FileId}';";
                                         SqlCommand cmd = new SqlCommand(Tmp, connection);
+                                        string fileIDCheck = (string)cmd.ExecuteScalar();
+
+                                        if (fileIDCheck != null)
+                                        {
+                                            if (File.Exists(ProcessedFolder + "//" + file.Name)) File.Delete(ProcessedFolder + "//" + file.Name);
+                                            File.Move(file.FullName, ProcessedFolder + "//" + file.Name);
+
+                                            Tmp = $" INSERT INTO IHRMGateKeeperLog(FileName, Remarks, DateTime) VALUES('{file.Name}', 'File Blocked With status Duplicate ID', getdate());";
+                                            cmd = new SqlCommand(Tmp, connection);
+                                            cmd.ExecuteScalar();
+
+                                            continue;
+                                        }
+
+                                        Tmp = $"SELECT Status FROM IHRMBatchLog WHERE YearMonth = '{YearMonth}' AND AccountNumber = '{AccountNumber}' AND Amount = '{Amount}';";
+                                        cmd = new SqlCommand(Tmp, connection);
                                         string fileStatusCheck = (string)cmd.ExecuteScalar();
 
-                                        if(fileStatusCheck == null || fileStatusCheck == "fail")
+                                        if (fileStatusCheck == null || fileStatusCheck == "fail")
                                         {
 
                                             doc.Save(file.FullName);
@@ -151,7 +177,7 @@ namespace OpusIHRM
                                             AffectedFileCount++;
 
                                             string MyTemmp = fileStatusCheck == null ? "New File" : fileStatusCheck;
-                                            if(fileStatusCheck == null)
+                                            if (fileStatusCheck == null)
                                             {
                                                 Tmp = $"INSERT INTO IHRMBatchLog (FileName, AccountNumber, YearMonth, Amount, Status, InitialDateTime) VALUES('{file.Name}','{AccountNumber}','{YearMonth}','{Amount}','posted',getdate());";
                                                 cmd = new SqlCommand(Tmp, connection);
@@ -163,19 +189,21 @@ namespace OpusIHRM
                                                 cmd = new SqlCommand(Tmp, connection);
                                                 cmd.ExecuteScalar();
                                             }
-                                            
 
+                                            Tmp = $"INSERT INTO IHRMBatchFileTrack (FileId, FileName, DateTime) VALUES('{FileId}','{file.Name}',getdate());";
+                                            cmd = new SqlCommand(Tmp, connection);
+                                            cmd.ExecuteScalar();
 
                                             Tmp = $" INSERT INTO IHRMGateKeeperLog(FileName, Remarks, DateTime) VALUES('{file.Name}', 'File Pass With status {MyTemmp}', getdate());";
                                             cmd = new SqlCommand(Tmp, connection);
                                             cmd.ExecuteScalar();
 
                                         }
-                                        else if(fileStatusCheck == "success")
+                                        else if (fileStatusCheck == "success")
                                         {
 
-                                            if (File.Exists(DuplicateFolder + "//" + file.Name)) File.Delete(DuplicateFolder + "//"+file.Name);
-                                            File.Move(file.FullName, DuplicateFolder+"//"+file.Name);
+                                            if (File.Exists(DuplicateFolder + "//" + file.Name)) File.Delete(DuplicateFolder + "//" + file.Name);
+                                            File.Move(file.FullName, DuplicateFolder + "//" + file.Name);
 
                                             Tmp = $" INSERT INTO IHRMGateKeeperLog(FileName, Remarks, DateTime) VALUES('{file.Name}', 'File blocked With status Already Success', getdate());";
                                             cmd = new SqlCommand(Tmp, connection);
@@ -238,17 +266,17 @@ namespace OpusIHRM
         {
 
             #region Testing... 
-            LogFile = @"E:\Development\Jogessor\DosExperiment\IHRMStatusUpdateLog.txt";
-            ConnectionString = @"Data Source=.;Initial Catalog=db_Goldfish;User ID=sa;Password=sa@1234;Pooling=true;Max Pool Size=32700;Integrated Security=True";
-            sourceFolder = @"E:\Development\Jogessor\DosExperiment\SLR.WRITE";//Assuming Test is your Folder
-            WriteBackUpFolder = @"E:\Development\Jogessor\DosExperiment\WriteBackUpFolder";
+            //LogFile = @"E:\Development\Jogessor\DosExperiment\IHRMStatusUpdateLog.txt";
+            //ConnectionString = @"Data Source=.;Initial Catalog=db_Goldfish;User ID=sa;Password=sa@1234;Pooling=true;Max Pool Size=32700;Integrated Security=True";
+            //sourceFolder = @"E:\Development\Jogessor\DosExperiment\SLR.WRITE";//Assuming Test is your Folder
+            //WriteBackUpFolder = @"E:\Development\Jogessor\DosExperiment\WriteBackUpFolder";
             #endregion
 
             #region Deploy...
-            //LogFile = @"E:\IHRMFiles\IHRMStatusUpdateLog.txt";
-            //ConnectionString = @"Data Source=WIN-AJMS15ULNA8\Ablsql;Initial Catalog=db_Goldfish;User ID=sa;Password=Abl#743%; Pooling=true;Max Pool Size=32700;";
-            //sourceFolder = @"X:\SLR.WRITE";
-            //WriteBackUpFolder = @"E:\IHRMFiles\WriteBackup";
+            LogFile = @"E:\IHRMFiles\IHRMStatusUpdateLog.txt";
+            ConnectionString = @"Data Source=WIN-AJMS15ULNA8\Ablsql;Initial Catalog=db_Goldfish;User ID=sa;Password=Abl#743%; Pooling=true;Max Pool Size=32700;";
+            sourceFolder = @"X:\SLR.WRITE";
+            WriteBackUpFolder = @"E:\IHRMFiles\WriteBackup";
             #endregion
 
         }
@@ -308,7 +336,7 @@ namespace OpusIHRM
                         SqlCommand cmd = new SqlCommand(Tmp, connection);
                         cmd.ExecuteScalar();
                         File.Copy(file.FullName, WriteBackUpFolder + "\\" + file.Name, true);
-                        if(Status == "1")
+                        if (Status == "1")
                         {
                             Tmp = $"UPDATE IHRMBatchLog SET Status = 'success', SuccessDateTime = getdate() WHERE FileName='{file.Name}'";
                             cmd = new SqlCommand(Tmp, connection);
