@@ -164,7 +164,9 @@ namespace OpusIHRM
                                         cmd = new SqlCommand(Tmp, connection);
                                         string fileStatusCheck = (string)cmd.ExecuteScalar();
 
-                                        string ACStarts = AccountNumber.Substring(0, 3);
+                                        string ACStarts = "N/A";
+
+                                        if(AccountNumber != null && AccountNumber.Length >=3) ACStarts = AccountNumber.Substring(0, 3);
 
                                         if (ACStarts=="BDT" || fileStatusCheck == null || fileStatusCheck == "fail")
                                         {
