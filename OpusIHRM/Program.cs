@@ -164,7 +164,9 @@ namespace OpusIHRM
                                         cmd = new SqlCommand(Tmp, connection);
                                         string fileStatusCheck = (string)cmd.ExecuteScalar();
 
-                                        if (fileStatusCheck == null || fileStatusCheck == "fail")
+                                        string ACStarts = AccountNumber.Substring(0, 3);
+
+                                        if (ACStarts=="BDT" || fileStatusCheck == null || fileStatusCheck == "fail")
                                         {
 
                                             doc.Save(file.FullName);
@@ -177,7 +179,7 @@ namespace OpusIHRM
                                             AffectedFileCount++;
 
                                             string MyTemmp = fileStatusCheck == null ? "New File" : fileStatusCheck;
-                                            if (fileStatusCheck == null)
+                                            if (ACStarts == "BDT" || fileStatusCheck == null)
                                             {
                                                 Tmp = $"INSERT INTO IHRMBatchLog (FileName, AccountNumber, YearMonth, Amount, Status, InitialDateTime) VALUES('{file.Name}','{AccountNumber}','{YearMonth}','{Amount}','posted',getdate());";
                                                 cmd = new SqlCommand(Tmp, connection);
