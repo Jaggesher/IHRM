@@ -72,7 +72,7 @@ namespace OpusIHRM
             SourceFolder = @"C:\inetpub\wwwroot\Payroll\Upload\XmlData";
             BackupFolder = @"E:\IHRMFiles\BackUp";
             RawXMLBackUp = @"E:\IHRMFiles\RAWXmlBackup";
-            DestinationFolder = @"X:\SLR.READ";
+            DestinationFolder = @"Z:\SLR.READ";
             DuplicateFolder = @"E:\IHRMFiles\Duplicate";
             ProcessedFolder = @"E:\IHRMFiles\Processed";
             LogFolder = @"E:\IHRMFiles\LogFiles\";
@@ -279,7 +279,7 @@ namespace OpusIHRM
             #region Deploy...
             LogFile = @"E:\IHRMFiles\IHRMStatusUpdateLog.txt";
             ConnectionString = @"Data Source=WIN-AJMS15ULNA8\Ablsql;Initial Catalog=db_Goldfish;User ID=sa;Password=Abl#743%; Pooling=true;Max Pool Size=32700;";
-            sourceFolder = @"X:\SLR.WRITE";
+            sourceFolder = @"Z:\SLR.WRITE";
             WriteBackUpFolder = @"E:\IHRMFiles\WriteBackup";
             #endregion
 
