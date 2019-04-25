@@ -265,6 +265,8 @@ namespace OpusIHRM
         private readonly string ConnectionString;
         private readonly string sourceFolder;
         private readonly string WriteBackUpFolder;
+        private readonly string ZeroFiles;
+        private readonly string RawXMLBackUp;
 
         public DataUpdate()
         {
@@ -274,6 +276,8 @@ namespace OpusIHRM
             //ConnectionString = @"Data Source=.;Initial Catalog=db_Goldfish;User ID=sa;Password=sa@1234;Pooling=true;Max Pool Size=32700;Integrated Security=True";
             //sourceFolder = @"E:\Development\Jogessor\DosExperiment\SLR.WRITE";//Assuming Test is your Folder
             //WriteBackUpFolder = @"E:\Development\Jogessor\DosExperiment\WriteBackUpFolder";
+            //RawXMLBackUp = @"E:\Development\Jogessor\DosExperiment\RawXMLBackUp";
+            //ZeroFiles = @"E:\Development\Jogessor\DosExperiment\ZeroBackUpFolder";
             #endregion
 
             #region Deploy...
@@ -281,6 +285,8 @@ namespace OpusIHRM
             ConnectionString = @"Data Source=WIN-AJMS15ULNA8\Ablsql;Initial Catalog=db_Goldfish;User ID=sa;Password=Abl#743%; Pooling=true;Max Pool Size=32700;";
             sourceFolder = @"Z:\SLR.WRITE";
             WriteBackUpFolder = @"E:\IHRMFiles\WriteBackup";
+            ZeroFiles = @"E:\IHRMFiles\ZeroFiles";
+            RawXMLBackUp = @"E:\IHRMFiles\RAWXmlBackup";
             #endregion
 
         }
@@ -313,7 +319,7 @@ namespace OpusIHRM
 
                         string[] contents = content.Split(',');
 
-                        if (contents.Length > 0)
+                        if (contents.Length > 1)
                         {
                             //First TRAN NUmber
                             TranNumber = contents[0];
@@ -329,6 +335,13 @@ namespace OpusIHRM
                                 ErrMessage = contents[1];
                             }
 
+                        }
+                        else
+                        {
+                            TranNumber = string.Empty;
+                            Status = "4";
+                            ErrMessage = string.Empty;
+                            File.Copy(RawXMLBackUp+"\\"+file.Name, ZeroFiles + "\\" + file.Name, true);
                         }
 
                         //Console.WriteLine(TranNumber + " "+ Status + " " +ErrMessage);
